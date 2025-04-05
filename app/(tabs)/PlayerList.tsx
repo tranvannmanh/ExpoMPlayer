@@ -5,15 +5,18 @@ import {
 	FlatList,
 	Pressable,
 	Image,
+	ImageBackground,
+	StatusBar,
 } from 'react-native';
 import React, { useCallback } from 'react';
 import RNFS from 'react-native-fs';
-import { requestExternalStoragePermission } from '../_layout';
 import { AudioFile } from '@/interface/playlist';
 import { useAudioPlayer } from 'expo-audio';
 import { THUMBNAIL } from '@/mock/thumb';
 import { IconPause, IconPlay, IconWave } from '@/assets/icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Link } from 'expo-router';
+import { BlurView } from 'expo-blur';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -23,13 +26,16 @@ const PlayerList = () => {
 	const [isTrackPlaying, setIsTrackPlaying] = React.useState(false);
 	const track = useAudioPlayer(currentPlayer?.path);
 	const directoryReader = async (path: string) => {
-		if (await requestExternalStoragePermission()) {
-			const contents = await RNFS.readDir(path);
-			const audioFiles = contents
-				.filter((f) => f.isFile() && /\.(mp3|wav|m4a)$/i.test(f.name))
-				.map((f) => ({ name: f.name, path: f.path }));
-			setAudioFiles(audioFiles);
-		}
+		// if (await requestExternalStoragePermission()) {
+		const contents = await RNFS.readDir(path);
+		const audioFiles = contents
+			.filter((f) => f.isFile() && /\.(mp3|wav|m4a)$/i.test(f.name))
+			.map((f) => ({
+				name: f.name.split('.mp3').join(' '),
+				path: f.path,
+			}));
+		setAudioFiles(audioFiles);
+		// }
 	};
 	React.useEffect(() => {
 		directoryReader(RNFS.DownloadDirectoryPath);
@@ -54,7 +60,7 @@ const PlayerList = () => {
 			}
 			return (
 				<Pressable
-					onPress={() => playTrack(item)}
+					onPress={() => playTrack({ ...item, thumbnail: thumb })}
 					style={styles.itemContainer}
 					android_ripple={{
 						color: '#00000020',
@@ -108,12 +114,7 @@ const PlayerList = () => {
 
 	const thumbnailRender = React.useMemo(() => {
 		if (currentPlayer?.thumbnail) {
-			return (
-				<Image
-					source={{ uri: currentPlayer.thumbnail }}
-					style={styles.thumbImg}
-				/>
-			);
+			return <Image source={currentPlayer.thumbnail} style={styles.thumbImg} />;
 		}
 		return (
 			<View style={styles.tinyPlayingTrackThumbContainer}>
@@ -145,31 +146,40 @@ const PlayerList = () => {
 			return null;
 		}
 		return (
-			<AnimatedPressable
-				entering={FadeInDown.duration(500)}
-				style={styles.tinyPlayingTrackContainer}
+			<Link
+				href={{
+					pathname: '/PlayingTrackDetail',
+					params: currentPlayer,
+				}}
+				asChild
 			>
-				{thumbnailRender}
-				{renderTrackInfo}
-				<Pressable onPress={togglePlayPause} style={styles.trackPlayingState}>
-					{!isTrackPlaying ? (
-						<IconPlay color="white" />
-					) : (
-						<IconPause color="white" />
-					)}
-				</Pressable>
-			</AnimatedPressable>
+				<AnimatedPressable
+					entering={FadeInDown.duration(500)}
+					style={styles.tinyPlayingTrackContainer}
+				>
+					{thumbnailRender}
+					{renderTrackInfo}
+					<Pressable onPress={togglePlayPause} style={styles.trackPlayingState}>
+						{!isTrackPlaying ? (
+							<IconPlay color="white" />
+						) : (
+							<IconPause color="white" />
+						)}
+					</Pressable>
+				</AnimatedPressable>
+			</Link>
 		);
 	}, [
 		currentPlayer,
-		isTrackPlaying,
 		thumbnailRender,
 		renderTrackInfo,
 		togglePlayPause,
+		isTrackPlaying,
 	]);
 
 	return (
 		<View style={styles.container}>
+			<StatusBar translucent backgroundColor={'transparent'} />
 			{trackList}
 			{tinyTrackPlayer}
 		</View>
@@ -216,6 +226,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: 'white',
+		paddingTop: StatusBar.currentHeight,
 	},
 	itemContainer: {
 		paddingVertical: 10,

@@ -7,6 +7,81 @@ export type AppIconProps = {
 	color?: string;
 };
 
+export const IconShuffleDisable = ({ width, height, color }: AppIconProps) => {
+	return (
+		<Svg
+			width={width || '24'}
+			height={height || '24'}
+			viewBox="0 0 24 24"
+			fill="none"
+		>
+			<Path
+				d="M16 4.5V7H5V9H16V11.5L19.5 8L16 4.5ZM16 12.5V15H5V17H16V19.5L19.5 16"
+				fill={color || 'black'}
+			/>
+		</Svg>
+	);
+};
+
+export const IconShuffle = ({ width, height, color }: AppIconProps) => {
+	return (
+		<Svg width={width} height={height || '24'} viewBox="0 0 23 24" fill="none">
+			<Path
+				d="M14.212 13.41L12.8608 14.82L15.8603 17.95L13.8958 20H19.1666V14.5L17.2116 16.54L14.212 13.41ZM13.8958 4L15.8508 6.04L3.83325 18.59L5.1845 20L17.2116 7.46L19.1666 9.5V4H13.8958ZM10.1487 9.17L5.1845 4L3.83325 5.41L8.78784 10.58L10.1487 9.17Z"
+				fill={color || 'black'}
+			/>
+		</Svg>
+	);
+};
+
+export const IconRepeat = ({ width, height, color }: AppIconProps) => {
+	return (
+		<Svg
+			width={width || '24'}
+			height={height || '24'}
+			viewBox="0 0 24 24"
+			fill="none"
+		>
+			<Path
+				d="M17 17H7V14L3 18L7 22V19H19V13H17V17ZM7 7H17V10L21 6L17 2V5H5V11H7V7Z"
+				fill={color || 'black'}
+			/>
+		</Svg>
+	);
+};
+
+export const IconRepeatOne = ({ width, height, color }: AppIconProps) => {
+	return (
+		<Svg
+			width={width || '24'}
+			height={height || '24'}
+			viewBox="0 0 24 24"
+			fill="none"
+		>
+			<Path
+				d="M13 15V9H12L10 10V11H11.5V15H13ZM17 17H7V14L3 18L7 22V19H19V13H17V17ZM7 7H17V10L21 6L17 2V5H5V11H7V7Z"
+				fill={color || 'black'}
+			/>
+		</Svg>
+	);
+};
+
+export const IconRepeatOff = ({ width, height, color }: AppIconProps) => {
+	return (
+		<Svg
+			width={width || '24'}
+			height={height || '24'}
+			viewBox="0 0 24 24"
+			fill="none"
+		>
+			<Path
+				d="M2 5.27L3.28 4L20 20.72L18.73 22L15.73 19H7V22L3 18L7 14V17H13.73L7 10.27V11H5V8.27L2 5.27ZM17 13H19V17.18L17 15.18V13ZM17 5V2L21 6L17 10V7H8.82L6.82 5H17Z"
+				fill={color || 'black'}
+			/>
+		</Svg>
+	);
+};
+
 export const IconMusic = ({ width, height, color }: AppIconProps) => {
 	return (
 		<Svg
@@ -112,6 +187,54 @@ export const IconPause = ({ width, height, color }: AppIconProps) => {
 			fill="none"
 		>
 			<Path d="M14 19H18V5H14V19ZM6 19H10V5H6V19Z" fill={color || 'black'} />
+		</Svg>
+	);
+};
+
+export const IconSkipNext = ({ width, height, color }: AppIconProps) => {
+	return (
+		<Svg
+			width={width || '24'}
+			height={height || '24'}
+			viewBox="0 0 24 24"
+			fill="none"
+		>
+			<Path
+				d="M16 18H18V6H16V18ZM6 18L14.5 12L6 6V18Z"
+				fill={color || 'black'}
+			/>
+		</Svg>
+	);
+};
+
+export const IconSkipPrevious = ({ width, height, color }: AppIconProps) => {
+	return (
+		<Svg
+			width={width || '24'}
+			height={height || '24'}
+			viewBox="0 0 24 24"
+			fill="none"
+		>
+			<Path
+				d="M6 18V6H8V18H6ZM9.5 12L18 6V18L9.5 12Z"
+				fill={color || 'black'}
+			/>
+		</Svg>
+	);
+};
+
+export const IconChevronDown = ({ width, height, color }: AppIconProps) => {
+	return (
+		<Svg
+			width={width || '24'}
+			height={height || '24'}
+			viewBox="0 0 24 24"
+			fill="none"
+		>
+			<Path
+				d="M7.41 8.58008L12 13.1701L16.59 8.58008L18 10.0001L12 16.0001L6 10.0001L7.41 8.58008Z"
+				fill={color || 'black'}
+			/>
 		</Svg>
 	);
 };

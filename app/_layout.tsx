@@ -34,6 +34,12 @@ export default function RootLayout() {
 			}}
 		>
 			<Stack.Screen name="(tabs)" />
+			<Stack.Screen
+				name="PlayingTrackDetail"
+				options={{
+					animation: 'fade_from_bottom',
+				}}
+			/>
 		</Stack>
 	);
 }
