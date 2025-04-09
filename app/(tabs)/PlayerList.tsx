@@ -5,50 +5,64 @@ import {
 	FlatList,
 	Pressable,
 	Image,
-	ImageBackground,
 	StatusBar,
 } from 'react-native';
 import React, { useCallback } from 'react';
 import RNFS from 'react-native-fs';
 import { AudioFile } from '@/interface/playlist';
-import { useAudioPlayer } from 'expo-audio';
 import { THUMBNAIL } from '@/mock/thumb';
 import { IconPause, IconPlay, IconWave } from '@/assets/icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Link } from 'expo-router';
-import { BlurView } from 'expo-blur';
+import { useTrackContext } from '@/hooks/useTrackContext';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const PlayerList = () => {
-	const [audioFiles, setAudioFiles] = React.useState<AudioFile[]>([]);
-	const [currentPlayer, setCurrentPlayer] = React.useState<AudioFile>();
-	const [isTrackPlaying, setIsTrackPlaying] = React.useState(false);
-	const track = useAudioPlayer(currentPlayer?.path);
-	const directoryReader = async (path: string) => {
-		// if (await requestExternalStoragePermission()) {
-		const contents = await RNFS.readDir(path);
-		const audioFiles = contents
-			.filter((f) => f.isFile() && /\.(mp3|wav|m4a)$/i.test(f.name))
-			.map((f) => ({
-				name: f.name.split('.mp3').join(' '),
-				path: f.path,
-			}));
-		setAudioFiles(audioFiles);
-		// }
-	};
+	// const [audioFiles, setAudioFiles] = React.useState<AudioFile[]>([]);
+	// const [currentTrack, setCurrentPlayer] = React.useState<AudioFile>();
+	// const [isTrackPlaying, setIsTrackPlaying] = React.useState(false);
+	// const trackController?. = useAudioPlayer(currentTrack?.path);
+	const {
+		isTrackPlaying,
+		setIsTrackPlaying,
+		trackList,
+		setTrackList,
+		currentTrack,
+		trackController,
+		setCurrentTrack,
+	} = useTrackContext();
+	const directoryReader = React.useCallback(
+		async (path: string) => {
+			// if (await requestExternalStoragePermission()) {
+			const contents = await RNFS.readDir(path);
+			const audioFiles = contents
+				.filter((f) => f.isFile() && /\.(mp3|wav|m4a)$/i.test(f.name))
+				.map((f) => ({
+					name: f.name.split('.mp3').join(' '),
+					path: f.path,
+				}));
+			setTrackList?.(audioFiles);
+			// setAudioFiles(audioFiles);
+			// }
+		},
+		[setTrackList]
+	);
 	React.useEffect(() => {
 		directoryReader(RNFS.DownloadDirectoryPath);
-	}, []);
+	}, [directoryReader]);
 	React.useEffect(() => {
-		if (currentPlayer?.path) {
-			track.play();
-			setIsTrackPlaying(true);
+		if (currentTrack?.path && trackController) {
+			trackController?.play();
+			setIsTrackPlaying?.(true);
 		}
-	}, [track, currentPlayer]);
-	const playTrack = useCallback((info: AudioFile) => {
-		setCurrentPlayer(info);
-	}, []);
+	}, [currentTrack?.path, trackController, setIsTrackPlaying]);
+	const playTrack = useCallback(
+		(info: AudioFile) => {
+			setCurrentTrack(info);
+		},
+		[setCurrentTrack]
+	);
 	const renderAudioItem = React.useCallback(
 		({ item }: { item: AudioFile }) => {
 			let thumb;
@@ -86,42 +100,42 @@ const PlayerList = () => {
 	);
 
 	const togglePlayPause = React.useCallback(() => {
-		if (track.playing) {
-			track.pause();
-			setIsTrackPlaying(false);
+		if (trackController?.playing) {
+			trackController?.pause();
+			setIsTrackPlaying?.(false);
 		} else {
-			track.play();
-			setIsTrackPlaying(true);
+			trackController?.play();
+			setIsTrackPlaying?.(true);
 		}
-	}, [track]);
+	}, [setIsTrackPlaying, trackController]);
 
 	/**
 	 * Render list audio files
 	 */
-	const trackList = React.useMemo(
+	const trackListRender = React.useMemo(
 		() => (
 			<>
 				<Text style={styles.textHeader}>Tracks to Play</Text>
 				<FlatList
-					data={audioFiles}
+					data={trackList}
 					renderItem={renderAudioItem}
 					keyExtractor={(f) => `${f.path}`}
 				/>
 			</>
 		),
-		[audioFiles, renderAudioItem]
+		[renderAudioItem, trackList]
 	);
 
 	const thumbnailRender = React.useMemo(() => {
-		if (currentPlayer?.thumbnail) {
-			return <Image source={currentPlayer.thumbnail} style={styles.thumbImg} />;
+		if (currentTrack?.thumbnail) {
+			return <Image source={currentTrack.thumbnail} style={styles.thumbImg} />;
 		}
 		return (
 			<View style={styles.tinyPlayingTrackThumbContainer}>
 				<IconWave color="white" />
 			</View>
 		);
-	}, [currentPlayer?.thumbnail]);
+	}, [currentTrack?.thumbnail]);
 
 	const renderTrackInfo = React.useMemo(
 		() => (
@@ -131,25 +145,25 @@ const PlayerList = () => {
 					style={styles.tinyPlayingTitle}
 					ellipsizeMode="tail"
 				>
-					{currentPlayer?.name}
+					{currentTrack?.name}
 				</Text>
 				<Text style={styles.tinyPlayingDescription}>
-					{currentPlayer?.author || 'unknown'}
+					{currentTrack?.author || 'unknown'}
 				</Text>
 			</View>
 		),
-		[currentPlayer?.name, currentPlayer?.author]
+		[currentTrack?.name, currentTrack?.author]
 	);
 
 	const tinyTrackPlayer = React.useMemo(() => {
-		if (!currentPlayer) {
+		if (!currentTrack) {
 			return null;
 		}
 		return (
 			<Link
 				href={{
 					pathname: '/PlayingTrackDetail',
-					params: currentPlayer,
+					params: currentTrack,
 				}}
 				asChild
 			>
@@ -170,7 +184,7 @@ const PlayerList = () => {
 			</Link>
 		);
 	}, [
-		currentPlayer,
+		currentTrack,
 		thumbnailRender,
 		renderTrackInfo,
 		togglePlayPause,
@@ -180,7 +194,7 @@ const PlayerList = () => {
 	return (
 		<View style={styles.container}>
 			<StatusBar translucent backgroundColor={'transparent'} />
-			{trackList}
+			{trackListRender}
 			{tinyTrackPlayer}
 		</View>
 	);

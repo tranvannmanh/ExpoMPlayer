@@ -4,7 +4,7 @@
 		"slug": "PlayerM",
 		"version": "1.0.0",
 		"orientation": "portrait",
-		"icon": "./assets/images/ic_launcher.png",
+		"icon": "./assets/images/manhearing.png",
 		"scheme": "myapp",
 		"userInterfaceStyle": "automatic",
 		"newArchEnabled": false,
@@ -14,7 +14,7 @@
 		},
 		"android": {
 			"adaptiveIcon": {
-				"foregroundImage": "./assets/images/ic_launcher.png",
+				"foregroundImage": "./assets/images/manhearing.png",
 				"backgroundColor": "#ffffff"
 			},
 			"permissions": ["android.permission.RECORD_AUDIO"],
@@ -30,7 +30,7 @@
 			[
 				"expo-splash-screen",
 				{
-					"image": "./assets/images/splashscreen_logo.png",
+					"image": "./assets/images/manhearing.png",
 					"imageWidth": 200,
 					"resizeMode": "contain",
 					"backgroundColor": "#ffffff"
