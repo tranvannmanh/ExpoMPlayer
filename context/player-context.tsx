@@ -1,15 +1,17 @@
 import { AudioFile } from '@/interface/playlist';
-import { AudioPlayer, useAudioPlayer } from 'expo-audio';
-import { createContext, PropsWithChildren, useState } from 'react';
+import { AudioPlayer, useAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { createContext, PropsWithChildren, useEffect, useState } from 'react';
 
 export type PlayerContextType = {
 	trackController?: AudioPlayer;
 	trackList: AudioFile[];
 	currentTrack?: AudioFile;
-	setCurrentTrack: (track: AudioFile) => void;
-	setTrackList: (tracks: AudioFile[]) => void;
+	setCurrentTrack: React.Dispatch<React.SetStateAction<AudioFile | undefined>>;
+	setTrackList: React.Dispatch<React.SetStateAction<AudioFile[]>>;
 	isTrackPlaying?: boolean;
-	setIsTrackPlaying?: (b: boolean) => void;
+	setIsTrackPlaying?: React.Dispatch<React.SetStateAction<boolean>>;
+	currentTrackIndex?: number;
+	setCurrentTrackIndex: React.Dispatch<React.SetStateAction<number>>;
 };
 
 export const TrackContext = createContext<PlayerContextType>({
@@ -18,13 +20,27 @@ export const TrackContext = createContext<PlayerContextType>({
 	currentTrack: undefined,
 	setCurrentTrack: () => {},
 	setTrackList: () => {},
+	currentTrackIndex: -1,
+	setCurrentTrackIndex: () => {},
 });
 
 export default function TracksProvider(props: PropsWithChildren) {
 	const [trackList, setTrackList] = useState<AudioFile[]>([]);
 	const [currentTrack, setCurrentTrack] = useState<AudioFile>();
 	const [isTrackPlaying, setIsTrackPlaying] = useState(false);
+	const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1);
 	const trackController = useAudioPlayer(currentTrack?.path);
+	useEffect(() => {
+		setAudioModeAsync({
+			shouldPlayInBackground: true,
+		});
+	}, []);
+	useEffect(() => {
+		if (currentTrack?.path && trackController) {
+			trackController?.play();
+			setIsTrackPlaying?.(true);
+		}
+	}, [currentTrack?.path, trackController, setIsTrackPlaying]);
 	return (
 		<TrackContext.Provider
 			value={{
@@ -35,6 +51,8 @@ export default function TracksProvider(props: PropsWithChildren) {
 				setTrackList,
 				isTrackPlaying,
 				setIsTrackPlaying,
+				currentTrackIndex,
+				setCurrentTrackIndex,
 			}}
 		>
 			{props.children}

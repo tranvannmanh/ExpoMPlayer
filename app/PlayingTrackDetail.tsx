@@ -11,8 +11,8 @@ import {
 import React from 'react';
 import {
 	IconChevronDown,
+	IconPause,
 	IconPlay,
-	IconRepeatOff,
 	IconRepeatOne,
 	IconShuffle,
 	IconSkipNext,
@@ -22,73 +22,159 @@ import { BlurView } from 'expo-blur';
 import { WINDOW_WIDTH } from '@/constant/screen-size';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTrackContext } from '@/hooks/useTrackContext';
 
 const THUMB_WIDTH = WINDOW_WIDTH - 32;
-const THUMB_WIDTH_MAX = 250;
-const THUMB_WIDTH_USE = Math.min(WINDOW_WIDTH, THUMB_WIDTH_MAX);
+const THUMB_WIDTH_MAX = 276;
+const THUMB_WIDTH_USE = Math.min(THUMB_WIDTH, THUMB_WIDTH_MAX);
 
-const THUMB_ASSET = require('../assets/images/motion_bird.png');
+// const THUMB_ASSET = require('../assets/images/motion_bird.png');
 
 const PlayingTrackDetail = () => {
 	const router = useRouter();
+	const {
+		currentTrack,
+		trackController,
+		isTrackPlaying,
+		setIsTrackPlaying,
+		trackList,
+		currentTrackIndex,
+		setCurrentTrackIndex,
+		setCurrentTrack,
+	} = useTrackContext();
+
+	const playToggle = React.useCallback(() => {
+		setIsTrackPlaying?.((prev) => {
+			if (prev) {
+				trackController?.pause();
+			} else {
+				trackController?.play();
+			}
+			return !prev;
+		});
+	}, [setIsTrackPlaying, trackController]);
+
+	const nextAudio = React.useCallback(() => {
+		if (
+			currentTrackIndex === undefined ||
+			currentTrackIndex === -1 ||
+			trackList.length < 2
+		) {
+			return;
+		}
+		const trackListMaxIdx = trackList.length - 1 || 0;
+		let nextTrackIdx = -1;
+		if (currentTrackIndex < trackListMaxIdx) {
+			nextTrackIdx = currentTrackIndex + 1;
+		} else {
+			nextTrackIdx = 0;
+		}
+		setCurrentTrackIndex(nextTrackIdx);
+		console.log('next track...', trackList[nextTrackIdx]);
+		setCurrentTrack(trackList[nextTrackIdx]);
+	}, [currentTrackIndex, setCurrentTrack, setCurrentTrackIndex, trackList]);
+
+	const prevAudio = React.useCallback(() => {
+		if (
+			currentTrackIndex === undefined ||
+			currentTrackIndex === -1 ||
+			trackList.length < 2
+		) {
+			return;
+		}
+		let nextTrackIdx = -1;
+		if (currentTrackIndex > 0) {
+			nextTrackIdx = currentTrackIndex - 1;
+		} else {
+			nextTrackIdx = trackList.length - 1;
+		}
+		setCurrentTrackIndex(nextTrackIdx);
+		setCurrentTrack(trackList[nextTrackIdx]);
+	}, [currentTrackIndex, setCurrentTrack, setCurrentTrackIndex, trackList]);
+
+	const trackDuration = React.useMemo(() => {
+		if (trackController?.duration) {
+			const minutes = Math.floor(trackController.duration / 60);
+			const seconds = Math.round(trackController.duration - minutes * 60);
+			return `${minutes}:${seconds}`;
+		}
+		return '0:00';
+	}, [trackController?.duration]);
 
 	const renderDurationProcess = React.useMemo(
 		() => (
-			<ImageBackground
-				source={THUMB_ASSET}
-				style={{
-					width: THUMB_WIDTH_USE,
-					height: 2,
-					borderRadius: 100,
-					flexDirection: 'row',
-					alignItems: 'center',
-					justifyContent: 'flex-start',
-				}}
-			>
-				<View
+			<View>
+				<ImageBackground
+					source={currentTrack?.thumbnail}
 					style={{
-						width: Math.max(THUMB_WIDTH_USE * 0.3 - 4, 0),
-						backgroundColor: 'white',
+						width: THUMB_WIDTH_USE,
 						height: 2,
-						borderRadius: 2,
+						borderRadius: 100,
+						flexDirection: 'row',
+						alignItems: 'center',
+						justifyContent: 'flex-start',
 					}}
-				/>
+				>
+					<View
+						style={{
+							width: Math.max(THUMB_WIDTH_USE * 0.3 - 4, 0),
+							backgroundColor: 'white',
+							height: 2,
+							borderRadius: 2,
+						}}
+					/>
+					<View
+						style={{
+							width: 6,
+							height: 6,
+							borderRadius: 4,
+							backgroundColor: 'white',
+						}}
+					/>
+				</ImageBackground>
 				<View
 					style={{
-						width: 6,
-						height: 6,
-						borderRadius: 4,
-						backgroundColor: 'white',
+						flexDirection: 'row',
+						alignItems: 'center',
+						justifyContent: 'space-between',
+						marginTop: 4,
 					}}
-				/>
-			</ImageBackground>
+				>
+					<Text style={{ color: 'white', fontSize: 12 }}>0:00</Text>
+					<Text style={{ color: 'white', fontSize: 12 }}>{trackDuration}</Text>
+				</View>
+			</View>
 		),
-		[]
+		[currentTrack?.thumbnail, trackDuration]
 	);
 	const renderButtonRowMain = React.useMemo(
 		() => (
 			<View style={styles.buttonsRow}>
-				<TouchableOpacity style={styles.sideButtons}>
+				<TouchableOpacity style={styles.sideButtons} onPress={prevAudio}>
 					<IconSkipPrevious color="white" width={40} height={40} />
 				</TouchableOpacity>
-				<Pressable style={styles.buttonPlay}>
-					<IconPlay width={28} height={28} />
+				<Pressable style={styles.buttonPlay} onPress={playToggle}>
+					{!isTrackPlaying ? (
+						<IconPlay width={28} height={28} />
+					) : (
+						<IconPause width={28} height={28} />
+					)}
 				</Pressable>
-				<TouchableOpacity style={styles.sideButtons}>
+				<TouchableOpacity style={styles.sideButtons} onPress={nextAudio}>
 					<IconSkipNext color="white" width={40} height={40} />
 				</TouchableOpacity>
 			</View>
 		),
-		[]
+		[isTrackPlaying, nextAudio, playToggle, prevAudio]
 	);
 	const renderButtonRowSecond = React.useMemo(
 		() => (
 			<View style={styles.buttonsRow}>
 				<TouchableOpacity style={styles.sideButtons}>
-					<IconRepeatOne width={32} height={32} color="white" />
+					<IconShuffle width={32} height={32} color="white" />
 				</TouchableOpacity>
 				<TouchableOpacity style={styles.sideButtons}>
-					<IconShuffle width={32} height={32} color="white" />
+					<IconRepeatOne width={32} height={32} color="white" />
 				</TouchableOpacity>
 			</View>
 		),
@@ -98,12 +184,10 @@ const PlayingTrackDetail = () => {
 		() => (
 			<>
 				<Image
-					source={THUMB_ASSET}
+					source={currentTrack?.thumbnail}
 					style={{
-						width: THUMB_WIDTH,
-						height: THUMB_WIDTH,
-						maxWidth: THUMB_WIDTH_MAX,
-						maxHeight: THUMB_WIDTH_MAX,
+						width: THUMB_WIDTH_USE,
+						height: THUMB_WIDTH_USE,
 						borderRadius: 16,
 					}}
 				/>
@@ -112,27 +196,32 @@ const PlayingTrackDetail = () => {
 						numberOfLines={1}
 						ellipsizeMode="tail"
 						style={{
+							width: THUMB_WIDTH_USE,
 							color: 'white',
 							fontSize: 16,
 							marginBottom: 4,
 						}}
 					>
-						Lorem ipsum industry ...
+						{currentTrack?.name}
 					</Text>
 					<Text
 						numberOfLines={1}
 						ellipsizeMode="tail"
-						style={{ color: 'white', fontSize: 12 }}
+						style={{
+							width: THUMB_WIDTH_USE,
+							color: 'white',
+							fontSize: 12,
+						}}
 					>
-						from 10th century
+						{currentTrack?.author || 'unknown'}
 					</Text>
 				</View>
 			</>
 		),
-		[]
+		[currentTrack?.author, currentTrack?.name, currentTrack?.thumbnail]
 	);
 	return (
-		<ImageBackground source={THUMB_ASSET} style={styles.container}>
+		<ImageBackground source={currentTrack?.thumbnail} style={styles.container}>
 			<StatusBar
 				translucent
 				backgroundColor={'transparent'}
@@ -159,9 +248,13 @@ const PlayingTrackDetail = () => {
 							alignItems: 'center',
 						}}
 					>
-						<View style={{ gap: 16 }}>
+						<View style={{ gap: 16, alignItems: 'center' }}>
 							{renderTrackInfo}
 							{renderDurationProcess}
+						</View>
+						<View
+							style={{ width: THUMB_WIDTH_USE + 12, marginTop: 16, gap: 12 }}
+						>
 							{renderButtonRowSecond}
 							{renderButtonRowMain}
 						</View>
@@ -185,8 +278,8 @@ const styles = StyleSheet.create({
 		gap: 32,
 	},
 	buttonPlay: {
-		width: 46,
-		height: 46,
+		width: 52,
+		height: 52,
 		borderRadius: 100,
 		backgroundColor: 'white',
 		justifyContent: 'center',
@@ -194,10 +287,9 @@ const styles = StyleSheet.create({
 	},
 	sideButtons: {
 		borderRadius: 100,
-		width: 46,
-		height: 46,
+		width: 36,
+		height: 36,
 		justifyContent: 'center',
 		alignItems: 'center',
-		overflow: 'hidden',
 	},
 });

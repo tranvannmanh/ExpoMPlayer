@@ -15,14 +15,11 @@ import { IconPause, IconPlay, IconWave } from '@/assets/icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Link } from 'expo-router';
 import { useTrackContext } from '@/hooks/useTrackContext';
+import { requestExternalStoragePermission } from '@/utils/permissions';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const PlayerList = () => {
-	// const [audioFiles, setAudioFiles] = React.useState<AudioFile[]>([]);
-	// const [currentTrack, setCurrentPlayer] = React.useState<AudioFile>();
-	// const [isTrackPlaying, setIsTrackPlaying] = React.useState(false);
-	// const trackController?. = useAudioPlayer(currentTrack?.path);
 	const {
 		isTrackPlaying,
 		setIsTrackPlaying,
@@ -31,6 +28,7 @@ const PlayerList = () => {
 		currentTrack,
 		trackController,
 		setCurrentTrack,
+		setCurrentTrackIndex,
 	} = useTrackContext();
 	const directoryReader = React.useCallback(
 		async (path: string) => {
@@ -38,49 +36,41 @@ const PlayerList = () => {
 			const contents = await RNFS.readDir(path);
 			const audioFiles = contents
 				.filter((f) => f.isFile() && /\.(mp3|wav|m4a)$/i.test(f.name))
-				.map((f) => ({
-					name: f.name.split('.mp3').join(' '),
-					path: f.path,
-				}));
+				.map((f) => {
+					const randThumbIdx = Math.floor(Math.random() * THUMBNAIL.length);
+					return {
+						name: f.name.split('.mp3').join(' '),
+						path: f.path,
+						thumbnail: THUMBNAIL[randThumbIdx],
+					};
+				});
 			setTrackList?.(audioFiles);
-			// setAudioFiles(audioFiles);
 			// }
 		},
 		[setTrackList]
 	);
 	React.useEffect(() => {
-		directoryReader(RNFS.DownloadDirectoryPath);
+		setTimeout(() => directoryReader(RNFS.DownloadDirectoryPath), 250);
 	}, [directoryReader]);
-	React.useEffect(() => {
-		if (currentTrack?.path && trackController) {
-			trackController?.play();
-			setIsTrackPlaying?.(true);
-		}
-	}, [currentTrack?.path, trackController, setIsTrackPlaying]);
+
 	const playTrack = useCallback(
-		(info: AudioFile) => {
+		(info: AudioFile, index: number) => {
 			setCurrentTrack(info);
+			setCurrentTrackIndex(index);
 		},
-		[setCurrentTrack]
+		[setCurrentTrack, setCurrentTrackIndex]
 	);
 	const renderAudioItem = React.useCallback(
-		({ item }: { item: AudioFile }) => {
-			let thumb;
-			if (item.thumbnail) {
-				thumb = item.thumbnail;
-			} else {
-				const randThumbIdx = Math.floor(Math.random() * THUMBNAIL.length);
-				thumb = THUMBNAIL[randThumbIdx];
-			}
+		({ item, index }: { item: AudioFile; index: number }) => {
 			return (
 				<Pressable
-					onPress={() => playTrack({ ...item, thumbnail: thumb })}
+					onPress={() => playTrack(item, index)}
 					style={styles.itemContainer}
 					android_ripple={{
 						color: '#00000020',
 					}}
 				>
-					<Image source={thumb} style={styles.thumbImg} />
+					<Image source={item.thumbnail} style={styles.thumbImg} />
 					<View style={styles.rightContainer}>
 						<Text
 							numberOfLines={1}
