@@ -5,6 +5,7 @@ import {
 	PropsWithChildren,
 	useCallback,
 	useEffect,
+	useRef,
 	useState,
 } from 'react';
 
@@ -37,35 +38,34 @@ export const TrackContext = createContext<PlayerContextType>({
 });
 
 export default function TracksProvider(props: PropsWithChildren) {
+	const autoNextTimoutId = useRef<NodeJS.Timeout>();
 	const [trackList, setTrackList] = useState<AudioFile[]>([]);
 	const [currentTrack, setCurrentTrack] = useState<AudioFile>();
 	const [isTrackPlaying, setIsTrackPlaying] = useState(false);
 	const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1);
 	const trackController = useAudioPlayer(currentTrack?.path);
-	const togglePlay = useCallback(() => {
-		setIsTrackPlaying?.((prev) => {
-			if (prev) {
-				trackController?.pause();
-			} else {
-				trackController?.play();
-			}
-			return !prev;
-		});
-	}, [setIsTrackPlaying, trackController]);
-	const playNextAudio = useCallback(() => {
-		if (
-			currentTrackIndex === undefined ||
-			currentTrackIndex === -1 ||
-			trackList.length < 2
-		) {
-			return;
+
+	const clearAutoNextTimout = () => {
+		if (autoNextTimoutId.current) {
+			clearTimeout(autoNextTimoutId.current);
+			autoNextTimoutId.current = undefined;
 		}
-		const trackListMaxIdx = Math.max(trackList.length - 1, 0);
-		let nextTrackIdx =
-			currentTrackIndex < trackListMaxIdx ? currentTrackIndex + 1 : 0;
-		setCurrentTrackIndex(nextTrackIdx);
-		setCurrentTrack(trackList[nextTrackIdx]);
-	}, [currentTrackIndex, setCurrentTrack, setCurrentTrackIndex, trackList]);
+	};
+
+	const playNextAudio = useCallback(() => {
+		clearAutoNextTimout();
+		let curTrackIdx = -1;
+		setCurrentTrackIndex((prev) => {
+			if (prev === undefined || prev === -1 || trackList.length < 2) {
+				return 0;
+			}
+			const trackListMaxIdx = Math.max(trackList.length - 1, 0);
+			curTrackIdx = prev < trackListMaxIdx ? prev + 1 : 0;
+			return curTrackIdx;
+		});
+		setCurrentTrack(trackList[curTrackIdx]);
+	}, [trackList]);
+
 	const playPrevAudio = useCallback(() => {
 		if (
 			currentTrackIndex === undefined ||
@@ -79,20 +79,42 @@ export default function TracksProvider(props: PropsWithChildren) {
 		setCurrentTrackIndex(nextTrackIdx);
 		setCurrentTrack(trackList[nextTrackIdx]);
 	}, [currentTrackIndex, setCurrentTrack, setCurrentTrackIndex, trackList]);
+
+	const togglePlay = useCallback(() => {
+		setIsTrackPlaying?.((prev) => {
+			if (prev) {
+				console.log('TRACK CURRENT TIME..', trackController.currentTime);
+				trackController?.pause();
+				clearAutoNextTimout();
+			} else {
+				trackController?.play();
+				console.log('TRACK CURRENT TIME..', trackController.currentTime);
+				autoNextTimoutId.current = setTimeout(() => {
+					playNextAudio();
+				}, trackController.currentTime * 1000);
+			}
+			return !prev;
+		});
+	}, [playNextAudio, trackController]);
+
+	// Handle play in background
 	useEffect(() => {
 		setAudioModeAsync({
 			shouldPlayInBackground: true,
 		});
 	}, []);
+
 	useEffect(() => {
-		if (currentTrack?.path && trackController) {
-			trackController?.play();
-			setIsTrackPlaying?.(true);
-			setTimeout(() => {
+		if (currentTrack?.path) {
+			autoNextTimoutId.current = setTimeout(() => {
 				playNextAudio();
 			}, trackController.duration * 1000);
+			trackController?.play();
+			setIsTrackPlaying?.(true);
+			console.log('TRACK DURATION...', trackController.duration);
 		}
-	}, [currentTrack?.path, trackController, setIsTrackPlaying, playNextAudio]);
+	}, [trackController, currentTrack?.path, playNextAudio]);
+
 	return (
 		<TrackContext.Provider
 			value={{

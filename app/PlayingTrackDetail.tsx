@@ -26,7 +26,8 @@ const PlayingTrackDetail = () => {
 		if (trackController?.duration) {
 			const minutes = Math.floor(trackController.duration / 60);
 			const seconds = Math.round(trackController.duration - minutes * 60);
-			return `${minutes}:${seconds}`;
+			const secondSS = seconds < 10 ? `0${seconds}` : `${seconds}`;
+			return `${minutes}:${secondSS}`;
 		}
 		return '0:00';
 	};

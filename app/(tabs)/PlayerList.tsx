@@ -22,13 +22,12 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const PlayerList = () => {
 	const {
 		isTrackPlaying,
-		setIsTrackPlaying,
 		trackList,
 		setTrackList,
 		currentTrack,
-		trackController,
 		setCurrentTrack,
 		setCurrentTrackIndex,
+		togglePlay,
 	} = useTrackContext();
 	const directoryReader = React.useCallback(
 		async (path: string) => {
@@ -88,16 +87,6 @@ const PlayerList = () => {
 		},
 		[playTrack]
 	);
-
-	const togglePlayPause = React.useCallback(() => {
-		if (trackController?.playing) {
-			trackController?.pause();
-			setIsTrackPlaying?.(false);
-		} else {
-			trackController?.play();
-			setIsTrackPlaying?.(true);
-		}
-	}, [setIsTrackPlaying, trackController]);
 
 	/**
 	 * Render list audio files
@@ -163,7 +152,7 @@ const PlayerList = () => {
 				>
 					{thumbnailRender}
 					{renderTrackInfo}
-					<Pressable onPress={togglePlayPause} style={styles.trackPlayingState}>
+					<Pressable onPress={togglePlay} style={styles.trackPlayingState}>
 						{!isTrackPlaying ? (
 							<IconPlay color="white" />
 						) : (
@@ -177,7 +166,7 @@ const PlayerList = () => {
 		currentTrack,
 		thumbnailRender,
 		renderTrackInfo,
-		togglePlayPause,
+		togglePlay,
 		isTrackPlaying,
 	]);
 
