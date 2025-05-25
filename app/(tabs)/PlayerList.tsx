@@ -8,7 +8,7 @@ import {
 	StatusBar,
 } from 'react-native';
 import React, { useCallback } from 'react';
-import RNFS from 'react-native-fs';
+import RNFS, { ReadDirItem } from 'react-native-fs';
 import { AudioFile } from '@/interface/playlist';
 import { THUMBNAIL } from '@/mock/thumb';
 import { IconPause, IconPlay, IconWave } from '@/assets/icons';
@@ -29,24 +29,27 @@ const PlayerList = () => {
 		setCurrentTrackIndex,
 		togglePlay,
 	} = useTrackContext();
+
+	const isAudioFile = useCallback((file: ReadDirItem) => {
+		return file.isFile() && /\.(mp3|wav|m4a)$/i.test(file.name);
+	}, []);
+
 	const directoryReader = React.useCallback(
 		async (path: string) => {
 			// if (await requestExternalStoragePermission()) {
 			const contents = await RNFS.readDir(path);
-			const audioFiles = contents
-				.filter((f) => f.isFile() && /\.(mp3|wav|m4a)$/i.test(f.name))
-				.map((f) => {
-					const randThumbIdx = Math.floor(Math.random() * THUMBNAIL.length);
-					return {
-						name: f.name.split('.mp3').join(' '),
-						path: f.path,
-						thumbnail: THUMBNAIL[randThumbIdx],
-					};
-				});
+			const audioFiles = contents.filter(isAudioFile).map((f) => {
+				const randThumbIdx = Math.floor(Math.random() * THUMBNAIL.length);
+				return {
+					name: f.name.split('.mp3').join(' '),
+					path: f.path,
+					thumbnail: THUMBNAIL[randThumbIdx],
+				};
+			});
 			setTrackList?.(audioFiles);
 			// }
 		},
-		[setTrackList]
+		[isAudioFile, setTrackList]
 	);
 	React.useEffect(() => {
 		setTimeout(() => directoryReader(RNFS.DownloadDirectoryPath), 250);

@@ -22,15 +22,18 @@ const PlayingTrackDetail = () => {
 	const router = useRouter();
 	const { currentTrack, trackController } = useTrackContext();
 
-	const trackDuration = () => {
+	const trackDuration = React.useMemo(() => {
 		if (trackController?.duration) {
 			const minutes = Math.floor(trackController.duration / 60);
 			const seconds = Math.round(trackController.duration - minutes * 60);
 			const secondSS = seconds < 10 ? `0${seconds}` : `${seconds}`;
-			return `${minutes}:${secondSS}`;
+			return {
+				milis: trackController?.duration,
+				stringDisplay: `${minutes}:${secondSS}`,
+			};
 		}
-		return '0:00';
-	};
+		return { milis: 0, stringDisplay: '0:00' };
+	}, [trackController?.duration]);
 
 	const renderTrackInfo = React.useMemo(
 		() => (
@@ -57,6 +60,8 @@ const PlayingTrackDetail = () => {
 		[currentTrack?.author, currentTrack?.name, currentTrack?.thumbnail]
 	);
 
+	console.log('BBBBBBBBBBBBBBBBB');
+
 	return (
 		<ImageBackground source={currentTrack?.thumbnail} style={styles.container}>
 			<StatusBar
@@ -82,7 +87,7 @@ const PlayingTrackDetail = () => {
 						<View style={styles.trackInfoWrapper}>
 							{renderTrackInfo}
 							<DurationPlayingProcess
-								trackDuration={trackDuration()}
+								trackDuration={trackDuration}
 								currentTrack={currentTrack}
 							/>
 						</View>

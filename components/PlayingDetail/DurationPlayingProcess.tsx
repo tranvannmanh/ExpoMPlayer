@@ -2,10 +2,32 @@ import { ImageBackground, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 import { AudioFile } from '@/interface/playlist';
 import { THUMB_WIDTH_USE } from '@/constant/sizes';
+import { TrackContext } from '@/context/player-context';
 
 type Props = {
 	currentTrack?: AudioFile;
-	trackDuration?: string;
+	trackDuration?: { stringDisplay: string; milis: number };
+};
+
+const CurrentTimeProgressIndicator = ({ trackDuration }: Props) => {
+	const { currentTrackTimePlaying } = React.useContext(TrackContext);
+	const currentTime = currentTrackTimePlaying || 0;
+	const progressWidth = Math.max(
+		(currentTime / (trackDuration?.milis || 1)) * THUMB_WIDTH_USE - 4,
+		0
+	);
+
+	return (
+		<>
+			<View
+				style={[
+					styles.durationProgress,
+					{ width: Math.min(THUMB_WIDTH_USE, progressWidth) },
+				]}
+			/>
+			<View style={styles.durationDot} />
+		</>
+	);
 };
 
 const DurationPlayingProcess = ({ currentTrack, trackDuration }: Props) => {
@@ -15,25 +37,26 @@ const DurationPlayingProcess = ({ currentTrack, trackDuration }: Props) => {
 				source={currentTrack?.thumbnail}
 				style={styles.durationBar}
 			>
-				<View style={styles.durationProgress} />
-				<View style={styles.durationDot} />
+				<CurrentTimeProgressIndicator trackDuration={trackDuration} />
 			</ImageBackground>
 			<View style={styles.durationTextRow}>
 				<Text style={styles.durationText}>0:00</Text>
-				<Text style={styles.durationText}>{trackDuration || '0:00'}</Text>
+				<Text style={styles.durationText}>
+					{trackDuration?.stringDisplay || '0:00'}
+				</Text>
 			</View>
 		</View>
 	);
 };
 
-export default DurationPlayingProcess;
+export default React.memo(DurationPlayingProcess);
 
 const styles = StyleSheet.create({
 	durationTextRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		justifyContent: 'space-between',
-		marginTop: 4,
+		marginTop: 8,
 	},
 	durationBar: {
 		width: THUMB_WIDTH_USE,
