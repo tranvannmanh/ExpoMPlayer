@@ -18,22 +18,23 @@ import ButtonRowMain from '@/components/PlayingDetail/ButtonRowMain';
 import { THUMB_WIDTH_USE } from '@/constant/sizes';
 import DurationPlayingProcess from '@/components/PlayingDetail/DurationPlayingProcess';
 
+export const trackDuration = (duration: number) => {
+	if (duration) {
+		const minutes = Math.floor(duration / 60);
+		const seconds = Math.round(duration - minutes * 60);
+		const secondSS = seconds < 10 ? `0${seconds}` : `${seconds}`;
+		return {
+			milis: duration,
+			stringDisplay: `${minutes}:${secondSS}`,
+		};
+	}
+	return { milis: 0, stringDisplay: '0:00' };
+};
+
 const PlayingTrackDetail = () => {
 	const router = useRouter();
-	const { currentTrack, trackController } = useTrackContext();
-
-	const trackDuration = React.useMemo(() => {
-		if (trackController?.duration) {
-			const minutes = Math.floor(trackController.duration / 60);
-			const seconds = Math.round(trackController.duration - minutes * 60);
-			const secondSS = seconds < 10 ? `0${seconds}` : `${seconds}`;
-			return {
-				milis: trackController?.duration,
-				stringDisplay: `${minutes}:${secondSS}`,
-			};
-		}
-		return { milis: 0, stringDisplay: '0:00' };
-	}, [trackController?.duration]);
+	const { currentTrack, trackController, currentTrackTimePlaying } =
+		useTrackContext();
 
 	const renderTrackInfo = React.useMemo(
 		() => (
@@ -60,8 +61,6 @@ const PlayingTrackDetail = () => {
 		[currentTrack?.author, currentTrack?.name, currentTrack?.thumbnail]
 	);
 
-	console.log('BBBBBBBBBBBBBBBBB');
-
 	return (
 		<ImageBackground source={currentTrack?.thumbnail} style={styles.container}>
 			<StatusBar
@@ -87,8 +86,11 @@ const PlayingTrackDetail = () => {
 						<View style={styles.trackInfoWrapper}>
 							{renderTrackInfo}
 							<DurationPlayingProcess
-								trackDuration={trackDuration}
+								trackDuration={trackDuration(trackController?.duration || 0)}
 								currentTrack={currentTrack}
+								currentTrackTimePlaying={trackDuration(
+									currentTrackTimePlaying || 0
+								)}
 							/>
 						</View>
 						<View style={styles.controlsWrapper}>

@@ -15,7 +15,13 @@ import { IconPause, IconPlay, IconWave } from '@/assets/icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Link } from 'expo-router';
 import { useTrackContext } from '@/hooks/useTrackContext';
-import { requestExternalStoragePermission } from '@/utils/permissions';
+// import { requestExternalStoragePermission } from '@/utils/permissions';
+import { isAudioFile } from '@/utils/audio-helper';
+import { playerService } from '@/services/player-service';
+
+const playAudio = async (audio: AudioFile) => {
+	playerService.togglePlayTrack(audio);
+};
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -29,10 +35,6 @@ const PlayerList = () => {
 		setCurrentTrackIndex,
 		togglePlay,
 	} = useTrackContext();
-
-	const isAudioFile = useCallback((file: ReadDirItem) => {
-		return file.isFile() && /\.(mp3|wav|m4a)$/i.test(file.name);
-	}, []);
 
 	const directoryReader = React.useCallback(
 		async (path: string) => {
@@ -49,7 +51,7 @@ const PlayerList = () => {
 			setTrackList?.(audioFiles);
 			// }
 		},
-		[isAudioFile, setTrackList]
+		[setTrackList]
 	);
 	React.useEffect(() => {
 		setTimeout(() => directoryReader(RNFS.DownloadDirectoryPath), 250);
@@ -59,14 +61,16 @@ const PlayerList = () => {
 		(info: AudioFile, index: number) => {
 			setCurrentTrack(info);
 			setCurrentTrackIndex(index);
+			console.log('Playing track:', info);
 		},
 		[setCurrentTrack, setCurrentTrackIndex]
 	);
+
 	const renderAudioItem = React.useCallback(
 		({ item, index }: { item: AudioFile; index: number }) => {
 			return (
 				<Pressable
-					onPress={() => playTrack(item, index)}
+					onPress={() => playAudio(item)}
 					style={styles.itemContainer}
 					android_ripple={{
 						color: '#00000020',
@@ -88,7 +92,7 @@ const PlayerList = () => {
 				</Pressable>
 			);
 		},
-		[playTrack]
+		[]
 	);
 
 	/**
@@ -214,7 +218,7 @@ const styles = StyleSheet.create({
 		left: 10,
 		right: 10,
 		flexDirection: 'row',
-		backgroundColor: 'black',
+		backgroundColor: '#00000096',
 		borderRadius: 10,
 		padding: 6,
 		gap: 8,

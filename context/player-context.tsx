@@ -65,17 +65,14 @@ export default function TracksProvider(props: PropsWithChildren) {
 		}
 	}, []);
 
-	const handlePlayTrackChange = useCallback(
-		(track: AudioFile) => {
-			if (trackController?.duration) {
-				clearTrackPlayingTimeId();
-				setCurrentTrack(track);
-				setCurrentTrackTimePlaying(0);
+	const handleTrackPlayingTime = useCallback(
+		(trackCtl: AudioPlayer) => {
+			clearTrackPlayingTimeId();
+			if (trackCtl?.duration) {
 				currentTrackPlayingTimeId.current = setInterval(() => {
 					setCurrentTrackTimePlaying((prev) => {
-						if (prev >= trackController.duration) {
-							currentTrackPlayingTimeId.current &&
-								clearInterval(currentTrackPlayingTimeId.current);
+						if (prev >= trackCtl.duration) {
+							clearTrackPlayingTimeId();
 							return prev;
 						}
 						return prev + 1;
@@ -83,11 +80,20 @@ export default function TracksProvider(props: PropsWithChildren) {
 				}, 1000);
 			}
 		},
-		[clearTrackPlayingTimeId, trackController?.duration]
+		[clearTrackPlayingTimeId]
+	);
+
+	const handlePlayTrackChange = useCallback(
+		(track: AudioFile) => {
+			console.log('TRACK CONTROLLER:', trackController);
+			clearTrackPlayingTimeId();
+			setCurrentTrack(track);
+			setCurrentTrackTimePlaying(0);
+		},
+		[clearTrackPlayingTimeId, trackController]
 	);
 
 	const playNextAudio = useCallback(() => {
-		// clearAutoNextTimout();
 		let curTrackIdx = -1;
 		setCurrentTrackIndex((prev) => {
 			if (prev === undefined || prev === -1 || trackList.length < 2) {
@@ -128,7 +134,7 @@ export default function TracksProvider(props: PropsWithChildren) {
 			}
 			return !prev;
 		});
-	}, [trackController]);
+	}, [clearTrackPlayingTimeId, trackController]);
 
 	// Handle play in background
 	useEffect(() => {
@@ -139,13 +145,11 @@ export default function TracksProvider(props: PropsWithChildren) {
 
 	useEffect(() => {
 		if (currentTrack?.path) {
-			// autoNextTimoutId.current = setTimeout(() => {
-			// 	playNextAudio();
-			// }, trackController.duration * 1000);
 			trackController?.play();
 			setIsTrackPlaying?.(true);
+			handleTrackPlayingTime(trackController);
 		}
-	}, [trackController, currentTrack?.path]);
+	}, [trackController, currentTrack?.path, handleTrackPlayingTime]);
 
 	return (
 		<TrackContext.Provider

@@ -4,9 +4,15 @@ import { AudioFile } from '@/interface/playlist';
 import { THUMB_WIDTH_USE } from '@/constant/sizes';
 import { TrackContext } from '@/context/player-context';
 
+export type TrackDuration = {
+	stringDisplay: string;
+	milis: number;
+};
+
 type Props = {
 	currentTrack?: AudioFile;
-	trackDuration?: { stringDisplay: string; milis: number };
+	trackDuration?: TrackDuration;
+	currentTrackTimePlaying?: TrackDuration;
 };
 
 const CurrentTimeProgressIndicator = ({ trackDuration }: Props) => {
@@ -30,7 +36,11 @@ const CurrentTimeProgressIndicator = ({ trackDuration }: Props) => {
 	);
 };
 
-const DurationPlayingProcess = ({ currentTrack, trackDuration }: Props) => {
+const DurationPlayingProcess = ({
+	currentTrack,
+	trackDuration,
+	currentTrackTimePlaying,
+}: Props) => {
 	return (
 		<View>
 			<ImageBackground
@@ -40,7 +50,9 @@ const DurationPlayingProcess = ({ currentTrack, trackDuration }: Props) => {
 				<CurrentTimeProgressIndicator trackDuration={trackDuration} />
 			</ImageBackground>
 			<View style={styles.durationTextRow}>
-				<Text style={styles.durationText}>0:00</Text>
+				<Text style={styles.durationText}>
+					{currentTrackTimePlaying?.stringDisplay || '0:00'}
+				</Text>
 				<Text style={styles.durationText}>
 					{trackDuration?.stringDisplay || '0:00'}
 				</Text>
